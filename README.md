@@ -27,6 +27,28 @@ This app creates a 2.5D fish-tank VR illusion: a cube is rendered in a 2D window
 pip install -r requirements.txt
 ```
 
+Tested Python range: `3.10` to `3.12` (64-bit). This is important for `mediapipe` wheels, especially on Windows.
+
+### Windows venv quickstart
+
+PowerShell:
+
+```powershell
+py -3.11 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+cmd.exe:
+
+```bat
+py -3.11 -m venv .venv
+.\.venv\Scripts\activate.bat
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
 ## Run
 
 ```bash
@@ -48,6 +70,12 @@ python main.py \
   --debug
 ```
 
+Windows `cmd.exe` single-line equivalent:
+
+```bat
+python main.py --parallax-x 2.2 --parallax-y 1.6 --parallax-z 2.3 --focal-scale 0.95 --depth-offset 1.8 --rotation-speed 0.8 --debug
+```
+
 ## Calibration Tips
 
 - Sit centered in front of the camera for 1-2 seconds at startup (for depth baseline).
@@ -59,3 +87,4 @@ python main.py \
 
 - Requires a working webcam.
 - Uses OpenCV rendering only; no full 3D engine is used.
+- If the camera does not open on Windows, try `--camera 1` or another device index.

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from typing import List, Optional, Tuple
 
@@ -37,9 +38,7 @@ class HeadTracker:
         min_detection_confidence: float = 0.6,
         min_tracking_confidence: float = 0.6,
     ) -> None:
-        self.cap = cv2.VideoCapture(camera_index)
-        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
-        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+        self.cap = self._open_capture(camera_index, width, height)
 
         self.mp_face_mesh = mp.solutions.face_mesh
         self.face_mesh = self.mp_face_mesh.FaceMesh(
@@ -55,6 +54,36 @@ class HeadTracker:
 
         self._smoothed = np.zeros(3, dtype=np.float32)
         self._reference_eye_dist: Optional[float] = None
+
+    @staticmethod
+    def _open_capture(camera_index: int, width: int, height: int) -> cv2.VideoCapture:
+        backend_candidates: List[Optional[int]] = [None]
+        if os.name == "nt":
+            backend_candidates.extend(
+                [
+                    getattr(cv2, "CAP_DSHOW", None),
+                    getattr(cv2, "CAP_MSMF", None),
+                ]
+            )
+
+        seen: set[Optional[int]] = set()
+        for backend in backend_candidates:
+            if backend in seen:
+                continue
+            seen.add(backend)
+
+            cap = cv2.VideoCapture(camera_index) if backend is None else cv2.VideoCapture(camera_index, backend)
+            if not cap.isOpened():
+                cap.release()
+                continue
+
+            cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+            return cap
+
+        raise RuntimeError(
+            "Unable to open webcam. On Windows, verify camera permissions and try a different --camera index."
+        )
 
     def read(self) -> tuple[Optional[np.ndarray], TrackingState]:
         ok, frame = self.cap.read()

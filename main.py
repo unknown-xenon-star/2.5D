@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import argparse
+import sys
 import time
 
 import cv2
 import numpy as np
 
-from camera_tracking import HeadTracker
 from renderer import CubeRenderer
 
 
@@ -53,6 +53,18 @@ def overlay_preview(canvas: np.ndarray, preview: np.ndarray, padding: int = 16) 
 
 
 def main() -> None:
+    try:
+        from camera_tracking import HeadTracker
+    except Exception as exc:
+        raise SystemExit(
+            "Failed to initialize tracking dependencies. "
+            "Install requirements and use Python 3.10-3.12 in your virtual environment. "
+            f"Details: {exc}"
+        ) from exc
+
+    if sys.platform == "win32" and sys.maxsize < 2**32:
+        raise SystemExit("64-bit Python is required on Windows.")
+
     args = parse_args()
 
     tracker = HeadTracker(
